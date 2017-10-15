@@ -182,16 +182,15 @@ myUtils.getConfig(function (err, config) {
 function startDefaultConnections (connections, callback) {
   if (connections) {
     connections.forEach(function (connection) {
-      var client = new Redis(connection.port, connection.host);
+      // Cf. https://github.com/joeferner/redis-commander/issues/179#issuecomment-253222199
+      var client;
+      if (connection.password){
+        client = new Redis(connection.port, connection.host, {password: connection.password});
+      } else {
+        client = new Redis(connection.port, connection.host);
+      }
       client.label = connection.label;
       redisConnections.push(client);
-      if (connection.password) {
-        redisConnections.getLast().auth(connection.password, function (err) {
-          if (err) {
-            return callback(err);
-          }
-        });
-      }
       setUpConnection(redisConnections.getLast(), connection.dbIndex);
     });
   }
